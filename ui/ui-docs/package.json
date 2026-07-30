@@ -16,7 +16,7 @@
     "@apicurio/eslint-config": "1.0.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react-swc": "4.3.2",
+    "@vitejs/plugin-react-swc": "4.3.3",
     "eslint": "9.39.5",
     "eslint-plugin-react-hooks": "7.0.1",
     "eslint-plugin-react-refresh": "0.5.3",
