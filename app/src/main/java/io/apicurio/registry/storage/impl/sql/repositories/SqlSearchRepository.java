@@ -8,7 +8,6 @@ import io.apicurio.registry.storage.dto.SearchFilter;
 import io.apicurio.registry.storage.dto.SearchedArtifactDto;
 import io.apicurio.registry.storage.dto.SearchedVersionDto;
 import io.apicurio.registry.storage.dto.VersionSearchResultsDto;
-import io.apicurio.registry.storage.error.ContentSearchNotSupportedException;
 import io.apicurio.registry.storage.error.RegistryStorageException;
 import io.apicurio.registry.storage.impl.sql.HandleFactory;
 import io.apicurio.registry.storage.impl.sql.SqlStatements;
@@ -32,10 +31,6 @@ import static io.apicurio.registry.storage.impl.sql.RegistryContentUtils.normali
  * Extracted from AbstractSqlRegistryStorage to improve maintainability.
  */
 public class SqlSearchRepository {
-
-    private static final String CONTENT_SEARCH_UNSUPPORTED_MESSAGE =
-            "Content search requires the search index, which is not enabled. "
-            + "Enable the search index to use content search.";
 
     private final Logger log;
 
@@ -166,7 +161,13 @@ public class SqlSearchRepository {
                         where.append(")");
                         break;
                     case content:
-                        throw new ContentSearchNotSupportedException(CONTENT_SEARCH_UNSUPPORTED_MESSAGE);
+                        String artFtsClause = sqlStatements.fullTextSearchClause();
+                        where.append(artFtsClause);
+                        String artContentSearch = artFtsClause.contains("LIKE")
+                                ? "%" + filter.getStringValue() + "%"
+                                : filter.getStringValue();
+                        binders.add((query, idx) -> query.bind(idx, artContentSearch));
+                        break;
                     default:
                         throw new RegistryStorageException("Filter type not supported: " + filter.getType());
                 }
@@ -345,7 +346,13 @@ public class SqlSearchRepository {
                         where.append(")");
                         break;
                     case content:
-                        throw new ContentSearchNotSupportedException(CONTENT_SEARCH_UNSUPPORTED_MESSAGE);
+                        String verFtsClause = sqlStatements.fullTextSearchClause();
+                        where.append(verFtsClause);
+                        String verContentSearch = verFtsClause.contains("LIKE")
+                                ? "%" + filter.getStringValue() + "%"
+                                : filter.getStringValue();
+                        binders.add((query, idx) -> query.bind(idx, verContentSearch));
+                        break;
                     default:
                         throw new RegistryStorageException("Filter type not supported: " + filter.getType());
                 }
